@@ -1,0 +1,235 @@
+&lt;!doctype html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+&lt;head&gt;
+  &lt;meta charset=&quot;utf-8&quot; /&gt;
+  &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot; /&gt;
+  &lt;title&gt;Air Quality Insight Hub&lt;/title&gt;
+  &lt;meta name=&quot;description&quot; content=&quot;A responsive, accessible static site showcasing air quality index (AQI) insights with vanilla HTML, CSS, and JS.&quot; /&gt;
+  &lt;style&gt;
+    :root{
+      --bg: #0f1220;
+      --card: #171a2b;
+      --text: #e6e7f0;
+      --muted: #a9b3c7;
+      --primary: #4cc9f0;
+      --accent: #9d4edd;
+      --safe: #28a745;
+      --warn: #f59e0b;
+      --danger: #e11d48;
+      --surface: rgba(255,255,255,0.04);
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0;height:100%}
+    body{
+      font-family: system-ui, -apple-system, &quot;Segoe UI&quot;, Roboto, Arial, &quot;Noto Sans&quot;, &quot;Liberation Sans&quot;;
+      background: radial-gradient(circle at 20% -10%, rgba(76,201,240,.15), transparent 40%), 
+                  radial-gradient(circle at 100% 0%, rgba(157,78,237,.15), transparent 30%), 
+                  var(--bg);
+      color: var(--text);
+      line-height:1.5;
+    }
+    header{padding:1.25rem 1rem 0.25rem; text-align:center}
+    h1{margin:.25rem 0 0; font-size: clamp(1.25rem, 2.5vw + 1rem, 2.5rem);}
+    p.lead{color:var(--muted); margin:0.25rem auto 0; max-width:720px}
+    main{max-width:1100px; margin:0 auto; padding:1rem;}
+    .grid{display:grid; grid-template-columns: 1fr; gap:1rem}
+    @media (min-width: 800px){
+      .grid{grid-template-columns: 1.1fr 0.9fr}
+    }
+    .card{
+      background: var(--surface);
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:14px;
+      padding:1rem;
+      box-shadow: 0 6px 20px rgba(0,0,0,.25);
+    }
+    .card h2{font-size:1.25rem; margin:.25rem 0 0.5rem}
+    .stat{display:flex; align-items:center; justify-content:space-between; padding:.5rem 0; border-bottom:1px solid rgba(255,255,255,.08)}
+    .stat:last-child{border-bottom:0}
+    .badge{padding:.15rem .5rem; border-radius:999px; font-size:.75rem; background: rgba(76,201,240,.15); color:#bdeaff}
+    .chart{width:100%; height:240px; display:block}
+    .legend{display:flex; flex-wrap:wrap; gap:.5rem; margin-top:.5rem}
+    .legend .item{display:flex; align-items:center; gap:.4rem; padding:.25rem .5rem; border-radius:6px; background: rgba(255,255,255,.04);}
+    .legend .dot{width:12px; height:12px; border-radius:3px; display:inline-block}
+    .btn{appearance:none; border:0; padding:.6rem 1rem; border-radius:6px; cursor:pointer; background: var(--primary); color:white; font-weight:600}
+    .btn.secondary{background:#2a2f3a}
+    .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+    footer{text-align:center; padding:1rem; color:var(--muted)}
+    .kbd{font-family:monospace; padding:.1em .4em; border-radius:4px; border:1px solid rgba(255,255,255,.25); background: rgba(0,0,0,.25)}
+  &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;a class=&quot;sr-only&quot; href=&quot;#content&quot;&gt;Skip to content&lt;/a&gt;
+  &lt;header aria-label=&quot;Site header&quot;&gt;
+    &lt;h1&gt;Air Quality Insight Hub&lt;/h1&gt;
+    &lt;p class=&quot;lead&quot;&gt;A minimal, accessible static site to explore air quality index (AQI) trends and color-coded health guidance for your neighborhood.&lt;/p&gt;
+  &lt;/header&gt;
+
+  &lt;main id=&quot;content&quot; role=&quot;main&quot; aria-label=&quot;Main content&quot;&gt;
+    &lt;section class=&quot;grid&quot; aria-label=&quot;AQI insights grid&quot;&gt;
+      &lt;article class=&quot;card&quot; aria-labelledby=&quot;aqi-title&quot;&gt;
+        &lt;h2 id=&quot;aqi-title&quot;&gt;Live AQI Snapshot&lt;/h2&gt;
+        &lt;div class=&quot;stat&quot; aria-label=&quot;Overall AQI level&quot;&gt;
+          &lt;span&gt;Current AQI&lt;/span&gt;
+          &lt;strong id=&quot;current-aqi&quot; class=&quot;badge&quot; aria-live=&quot;polite&quot;&gt;42 (Good)&lt;/strong&gt;
+        &lt;/div&gt;
+        &lt;div class=&quot;stat&quot; aria-label=&quot;PM2.5 concentration&quot;&gt;
+          &lt;span&gt;PM2.5 (µg/m³)&lt;/span&gt;
+          &lt;strong id=&quot;pm25&quot; class=&quot;badge&quot; style=&quot;background: rgba(44, 212, 191,.15); color:#b7f3e8&quot;&gt;12&lt;/strong&gt;
+        &lt;/div&gt;
+        &lt;div class=&quot;stat&quot; aria-label=&quot;Ozone concentration&quot;&gt;
+          &lt;span&gt;Ozone (O3) 8h avg&lt;/span&gt;
+          &lt;strong id=&quot;ozone&quot; class=&quot;badge&quot; style=&quot;background: rgba(255,255,255,.08); color:#d9e4ff&quot;&gt;52 ppb&lt;/strong&gt;
+        &lt;/div&gt;
+        &lt;canvas id=&quot;chart&quot; class=&quot;chart&quot; role=&quot;img&quot; aria-label=&quot;AQI trend chart&quot; &gt;&lt;/canvas&gt;
+        &lt;div class=&quot;legend&quot; aria-label=&quot;Chart legend&quot;&gt;
+          &lt;span class=&quot;item&quot; title=&quot;AQI trend&quot;&gt;
+            &lt;span class=&quot;dot&quot; style=&quot;background:#4cc9f0&quot;&gt;&lt;/span&gt;AQI
+          &lt;/span&gt;
+          &lt;span class=&quot;item&quot; title=&quot;PM2.5 contribution&quot;&gt;
+            &lt;span class=&quot;dot&quot; style=&quot;background:#f472b6&quot;&gt;&lt;/span&gt;PM2.5
+          &lt;/span&gt;
+        &lt;/div&gt;
+        &lt;div style=&quot;margin-top:.5rem; display:flex; gap:.5rem; flex-wrap:wrap;&quot;&gt;
+          &lt;button class=&quot;btn&quot; id=&quot;refresh&quot; aria-label=&quot;Refresh data&quot;&gt;Refresh&lt;/button&gt;
+          &lt;button class=&quot;btn secondary&quot; id=&quot;more-info&quot; aria-label=&quot;Show health guidance&quot;&gt;Health Guidance&lt;/button&gt;
+        &lt;/div&gt;
+      &lt;/article&gt;
+
+      &lt;aside class=&quot;card&quot; aria-labelledby=&quot;info-title&quot;&gt;
+        &lt;h2 id=&quot;info-title&quot;&gt;Health Guidance&lt;/h2&gt;
+        &lt;p style=&quot;margin:.25rem 0 0; color:var(--muted);&quot;&gt;
+          This static demo displays advisory thresholds. If AQI is 0-50, air is considered good. Higher values warrant protective actions.
+        &lt;/p&gt;
+        &lt;ul aria-label=&quot;AQI recommendations&quot; style=&quot;margin:.5rem 0 0 1.1rem&quot;&gt;
+          &lt;li&gt;0-50 Good: Enjoy normal outdoor activities.&lt;/li&gt;
+          &lt;li&gt;51-100 Moderate: Some pollutants may affect very sensitive people.&lt;/li&gt;
+          &lt;li&gt;101-150 Unhealthy for sensitive groups: Limit prolonged outdoor exertion.&lt;/li&gt;
+          &lt;li&gt;151-200 Unhealthy: Reduce outdoor activities, especially for children and outdoorsy individuals.&lt;/li&gt;
+          &lt;li&gt;Over 200: Seek indoor air or wear a respirator in essential activities.&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/aside&gt;
+    &lt;/section&gt;
+  &lt;/main&gt;
+
+  &lt;footer aria-label=&quot;Site footer&quot;&gt;
+    &lt;p&gt;Air Quality Insight Hub • Static demo for GitHub Pages • Keyboard: &lt;span class=&quot;kbd&quot;&gt;R&lt;/span&gt; to refresh&lt;/p&gt;
+  &lt;/footer&gt;
+
+  &lt;script&gt;
+    // Simple seeded data for demonstration
+    const sampleData = [
+      {t: -9, aqi: 42, pm25: 12},
+      {t: -8, aqi: 46, pm25: 13},
+      {t: -7, aqi: 49, pm25: 14},
+      {t: -6, aqi: 55, pm25: 16},
+      {t: -5, aqi: 60, pm25: 18},
+      {t: -4, aqi: 58, pm25: 17},
+      {t: -3, aqi: 53, pm25: 15},
+      {t: -2, aqi: 48, pm25: 13},
+      {t: -1, aqi: 45, pm25: 12},
+      {t: 0, aqi: 42, pm25: 12}
+    ];
+
+    const currentAqiEl = document.getElementById(&quot;current-aqi&quot;);
+    const pm25El = document.getElementById(&quot;pm25&quot;);
+    const ozoneEl = document.getElementById(&quot;ozone&quot;);
+    const chartEl = document.getElementById(&quot;chart&quot;);
+    const refreshBtn = document.getElementById(&quot;refresh&quot;);
+    const moreInfoBtn = document.getElementById(&quot;more-info&quot;);
+
+    // Small canvas chart
+    function drawChart(data){
+      const w = chartEl.clientWidth;
+      const h = chartEl.clientHeight;
+      chartEl.width = w;
+      chartEl.height = h;
+      const ctx = chartEl.getContext(&#39;2d&#39;);
+      ctx.clearRect(0,0,w,h);
+
+      // grid
+      ctx.strokeStyle = &quot;rgba(255,255,255,.1)&quot;;
+      ctx.lineWidth = 1;
+      for(let y=0; y&lt;=h; y+=40){
+        ctx.beginPath();
+        ctx.moveTo(0,y);
+        ctx.lineTo(w,y);
+        ctx.stroke();
+      }
+
+      // scales
+      const maxAqi = 100;
+      const maxPm25 = Math.max(...data.map(d=&gt;d.pm25), 10);
+      const pad = 20;
+      const plotW = w - pad*2;
+      const plotH = h - pad*2;
+
+      function x(i){ return pad + (i/(data.length-1))*plotW; }
+      function yAqi(v){ // invert for canvas
+        return pad + (1 - v/maxAqi)*plotH;
+      }
+      function yPm(v){
+        return pad + (1 - v/maxPm25)*plotH;
+      }
+
+      // lines
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = &quot;#4cc9f0&quot;;
+      ctx.beginPath();
+      data.forEach((pt,i)=>{
+        const X = x(i);
+        const Y = yAqi(pt.aqi);
+        if(i===0) ctx.moveTo(X,Y); else ctx.lineTo(X,Y);
+      });
+      ctx.stroke();
+
+      ctx.strokeStyle = &quot;#f472b6&quot;;
+      ctx.beginPath();
+      data.forEach((pt,i)=>{
+        const X = x(i);
+        const Y = yPm(pt.pm25);
+        if(i===0) ctx.moveTo(X,Y); else ctx.lineTo(X,Y);
+      });
+      ctx.stroke();
+
+      // axes labels (minimal)
+      ctx.fillStyle = &quot;white&quot;;
+      ctx.font = &quot;12px sans-serif&quot;;
+      ctx.fillText(&quot;AQI&quot;, 6, 14);
+      ctx.fillText(&quot;PM2.5&quot;, 60, 14);
+    }
+
+    function updateDisplay(){
+      const last = sampleData[sampleData.length-1];
+      currentAqiEl.textContent = last.aqi + &quot; (&quot; + (last.aqi&lt;=50?&#39;Good&#39;: last.aqi&lt;=100?&#39;Moderate&#39;:&#39;Unhealthy&#39;) + &quot;)&#39;;
+      pm25El.textContent = last.pm25;
+      ozoneEl.textContent = &quot;52 ppb&quot;;
+      drawChart(sampleData);
+    }
+
+    // local mutable copy to simulate refresh
+    let sampleData = [...sampleData];
+
+    refreshBtn.addEventListener(&#39;click&#39;, ()=>{
+      // simulate tiny random variation
+      for (let i=0;i&lt;sampleData.length;i++){
+        const p = sampleData[i];
+        p.aqi = Math.max(0, Math.min(200, p.aqi + (Math.random()*6-3)));
+        p.pm25 = Math.max(5, p.pm25 + (Math.random()*2-1));
+      }
+      updateDisplay();
+    });
+
+    // keyboard shortcut
+    document.addEventListener(&#39;keydown&#39;, (e)=>{
+      if(e.key.toLowerCase() === &#39;r&#39;) refreshBtn.click();
+    });
+
+    // initial render
+    updateDisplay();
+
+    // Accessibility: ensure canvas has title
+    chartEl.setAttribute(&quot;aria-label&quot;,&#39;AQI trend chart showing AQI and PM2.5 over time&#39;);
+  &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
